@@ -34,8 +34,8 @@ function demo_visualindex()
     thumbPath = fullfile(conf.thumbDir, imdb.images.name{selTest(i)}) ;
 
     fprintf('Query image %s\n', imagePath) ;
-    im = readimage(imagePath) ;
-    thumb = readimage(thumbPath) ;
+    im = imread(imagePath) ;
+    thumb = imread(thumbPath) ;
     sz = [size(im,2); size(im,1)] ;
 
     figure(1) ; clf ;
@@ -49,7 +49,7 @@ function demo_visualindex()
       vl_tightsubplot(6,k,'box','outer') ;
       ii = find(imdb.images.id == ids(k)) ;
       sz_{k} = imdb.images.size(:, ii) ;
-      thumb_{k} = readimage(fullfile(conf.thumbDir, imdb.images.name{ii})) ;
+      thumb_{k} = imread(fullfile(conf.thumbDir, imdb.images.name{ii})) ;
       imagesc(thumb_{k}) ;
       axis image off ;
       title(sprintf('rank:%d score:%g id:%d', k, full(scores(k)), ids(k))) ;
@@ -57,6 +57,7 @@ function demo_visualindex()
 
     figure(4) ; clf ;
     visualindex_plot_matches(model, matches{1}, thumb_{1}, thumb, sz_{1}, sz) ;
+    fprintf('Press a key to start with the next query\n') ;
     pause ;
   end
 end

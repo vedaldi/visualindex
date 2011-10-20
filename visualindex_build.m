@@ -51,15 +51,18 @@ model.index = struct ;
 % Extract SIFT features from each image.
 
 % read features
-f = {} ; d = {} ;
-for i = 1:length(images)
+frames = cell(1,numel(images)) ;
+descrs = cell(1,numel(images)) ;
+parfor i = 1:length(images)
   fprintf('Adding image %s (%d of %d)\n', ...
           images{i}, i, numel(images)) ;
-  im = readimage(images{i}) ;
-  [model.index.frames{i}, ...
-   model.index.descrs{i}] = visualindex_get_features(model, im) ;
+  im = imread(images{i}) ;
+  [frames{i},descrs{i}] = visualindex_get_features(model, im) ;
 end
+model.index.frames = frames ;
+model.index.descrs = descrs ;
 model.index.ids = ids ;
+clear frames descrs ids ;
 
 % --------------------------------------------------------------------
 %                                                  Large scale k-means
@@ -73,28 +76,8 @@ assign = []  ;
 descrs = vl_colsubset(cat(2,model.index.descrs{:}), opts.numWords * 15) ;
 dist = inf(1, size(descrs,2)) ;
 
-model.vocab.centers = vl_colsubset(descrs, opts.numWords) ;
-
-for t = 1:opts.numKMeansIterations
-  % large scale k - means
-  model.vocab.tree = vl_kdtreebuild(model.vocab.centers, 'numTrees', 3) ;
-  [assign_, dist_] = visualindex_get_words(model, descrs) ;
-  ok = dist_ < dist ;
-  assign(ok) = assign_(ok) ;
-  dist(ok) = dist_(ok) ;
-  E(t) = mean(dist) ;
-
-  for b = 1:model.vocab.size
-    model.vocab.centers(:, b) = mean(descrs(:, assign == b),2) ;
-  end
-
-  figure(1) ; clf ; plot(E,'linewidth', 2) ;
-  title(sprintf('k-means energy (%d visual words, %d data points)', ...
-                model.vocab.size, size(descrs,2))) ;
-  xlim([1 opts.numKMeansIterations]) ; grid on ; drawnow ;
-
-  if t > 3 && (E(t-2) - E(t)) < 1e-2 * E(t), break ; end
-end
+[model.vocab.centers, model.vocab.tree] = ...
+    annkmeans(descrs, opts.numWords, 'verbose', true) ;
 
 % --------------------------------------------------------------------
 %                                                           Histograms
@@ -102,14 +85,17 @@ end
 % Compute a visual word histogram for each image, compute TF-IDF
 % weights, and then reweight the histograms.
 
+words = cell(1, numel(model.index.ids)) ;
+histograms = cell(1,numel(model.index.ids)) ;
 for t = 1:length(model.index.ids)
-  words = visualindex_get_words(model, model.index.descrs{t}) ;
-  model.index.words{t} = words ;
-  model.index.histograms{t} = sparse(double(words),1,...
-                                     ones(length(words),1), ...
-                                     model.vocab.size,1) ;
+  words{t} = visualindex_get_words(model, model.index.descrs{t}) ;
+  histograms{t} = sparse(double(words{t}),1,...
+                         ones(length(words{t}),1), ...
+                         model.vocab.size,1) ;
 end
-model.index.histograms = cat(2, model.index.histograms{:}) ;
+model.index.words = words ;
+model.index.histograms = cat(2, histograms{:}) ;
+clear words histograms ;
 
 % compute IDF weights
 model.vocab.weights = log((size(model.index.histograms,2)+1) ...

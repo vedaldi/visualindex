@@ -1,0 +1,15 @@
+                             VisualIndex
+                            Andrea Vedaldi
+
+VisualIndex is a simple MATLAB and VLFeat-based demo of a system that
+can index an image collection and enable visual queries.
+
+To run the demo, make sure that VLFeat is contained in a subfolder of
+the VisualIndex package directory and that it is compiled. Then open
+MATLAB and issue
+
+> demo_visualindex
+
+to automatically download the Oxford building dataset and start
+running demo queries. The indexing process takes a while, but can
+acclerated by opening a matlabpool (see MATLABPOOL()).

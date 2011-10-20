@@ -2,7 +2,6 @@ function [conf, imdb] = db_helper()
 % DB_HELPER
 
   rootDir = fileparts(mfilename('fullpath')) ;
-  addpath(fullfile(rootDir, 'db')) ;
 
   switch 1
     case 1
@@ -10,7 +9,6 @@ function [conf, imdb] = db_helper()
       conf.gtDir = fullfile(rootDir, 'data', 'oxbuild_gt') ;
       conf.numWords = 50000 ;
       buildDb = @() parseOxfordDb(conf.imageDir, conf.gtDir) ;
-      conf.selArtworks = 1:1000 ;
   end
 
   conf.dataDir = [conf.imageDir '-index'] ;
@@ -25,10 +23,6 @@ function [conf, imdb] = db_helper()
     vl_xmkdir(fileparts(conf.imdbPath)) ;
     save(conf.imdbPath, '-STRUCT', 'imdb') ;
   end
-
-  sel = find(ismember(imdb.images.class, conf.selArtworks)) ;
-  imdb.dir = conf.imageDir ;
-  imdb.images = soaSubsRef(imdb.images, sel) ;
 end
 
 % --------------------------------------------------------------
