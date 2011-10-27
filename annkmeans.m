@@ -24,14 +24,20 @@ opts.seed = 0 ;
 opts.numTrees = 3 ;
 opts.maxNumComparisons = 500 ;
 opts.maxNumIterations = 100 ;
+opts.parallel = true ;
 opts.verbose = 0 ;
 opts = vl_argparse(opts, varargin) ;
+
+% check for parallel Toolbox
+toolboxes = ver ;
+opts.parallel = opts.parallel & ismember('Parallel Computing Toolbox',{toolboxes.Name}) ;
 
 % get initial centers
 rand('state',opts.seed) ;
 centers = vl_colsubset(X, K) ;
 
 if opts.verbose
+  fprintf('%s: use parallel toolbox = %d\n', mfilename, opts.parallel) ;
   fprintf('%s: clustering %d vectors into %d parts\n', ...
           mfilename, size(X,2), K) ;
   fprintf('%s: maxNumComparisons = %d\n', mfilename, opts.maxNumComparisons) ;
@@ -40,17 +46,24 @@ end
 
 % chunk the data up
 numData = size(X,2) ;
-numChunks = max(matlabpool('size'), 1) ;
-data = Composite() ;
-dist = Composite() ;
-assign = Composite() ;
-
-for i = 1:numChunks
-  chunk = i:numChunks:numData ;
-  data{i} = X(:, chunk) ;
-  dist{i} = inf(1, numel(chunk), class(X)) ;
-  assign{i} = zeros(1, numel(chunk)) ;
+if opts.parallel
+  numChunks = max(matlabpool('size'), 1) ;
+  data = Composite() ;
+  dist = Composite() ;
+  assign = Composite() ;
+  for i = 1:numChunks
+    chunk = i:numChunks:numData ;
+    data{i} = X(:, chunk) ;
+    dist{i} = inf(1, numel(chunk), class(X)) ;
+    assign{i} = zeros(1, numel(chunk)) ;
+  end
+else
+  numChunks = 1 ;
+  data = X ;
+  dist = inf(1, numData, class(X)) ;
+  assign = zeros(1, numData) ;
 end
+
 %clear X ;
 
 E = [] ;
@@ -60,21 +73,27 @@ for t = 1:opts.maxNumIterations
   tree = vl_kdtreebuild(centers, 'numTrees', opts.numTrees) ;
 
   % get the updated cluster assignments and partial centers
-  spmd
-    [centers_, mass_, en_, assign, dist] = update(opts, ...
-                                                  data,K,centers,tree,...
-                                                  assign,dist) ;
+  if opts.parallel
+    spmd
+      [centers_, mass_, en_, assign, dist] = update(opts, ...
+                                                    data,K,centers,tree,...
+                                                    assign,dist) ;
+    end
+
+    centers = zeros(size(centers),class(centers)) ;
+    mass = zeros(1,K);
+    en = 0 ;
+    for i = 1:length(centers_)
+      centers = centers + centers_{i} ;
+      mass = mass + mass_{i} ;
+      en = en + en_{i} ;
+    end
+  else
+    [centers, mass, en, assign, dist] = update(opts, ...
+                                               data,K,centers,tree,...
+                                               assign,dist) ;
   end
 
-  % compute the new cluster centers
-  centers = zeros(size(centers),class(centers)) ;
-  mass = zeros(1,K);
-  en = 0 ;
-  for i = 1:length(centers_)
-    centers = centers + centers_{i} ;
-    mass = mass + mass_{i} ;
-    en = en + en_{i} ;
-  end
   centers = bsxfun(@times, centers, 1./max(mass,eps)) ;
   E(t) = en ;
 
