@@ -60,7 +60,7 @@ randn('state',0) ;
 rand('state',0) ;
 numRansacIterations = 500 ;
 for t = 1:numRansacIterations
-  fprintf('RANSAC iteration %d of %d\r', t, numRansacIterations) ;
+  %fprintf('RANSAC iteration %d of %d\r', t, numRansacIterations) ;
   % select a subset of 3 matched features at random
   subset = vl_colsubset(1:numMatches, 3) ;
 
