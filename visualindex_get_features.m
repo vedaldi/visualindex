@@ -8,6 +8,24 @@ function [f,d] = visualindex_get_features(model, im)
 
 area = size(im,1) * size(im,2) ;
 firstOctave = max(ceil(.5 * log2(area / 1024^2)), -1) ;
-[f,d] = vl_sift(im2single(rgb2gray(im)), ...
-                'firstoctave', firstOctave,  ...
-                'floatdescriptors') ;
+%[f,d] = vl_sift(im2single(rgb2gray(im)), ...
+%                'firstoctave', firstOctave,  ...
+%                'floatdescriptors') ;
+
+if size(im,3) > 1
+  im = rgb2gray(im) ;
+end
+if ~isa(im,'single')
+  im = im2single(im) ;
+end
+
+im = im / std(im(:)) ;
+
+[f,d] = vl_covdet(...
+  im, ...
+  'doubleImage', true, ...
+  'EstimateAffineShape', true, ...
+  'method', 'dog') ;
+
+
+

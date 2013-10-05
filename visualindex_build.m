@@ -44,7 +44,7 @@ model.vocab.size = opts.numWords ;
 model.vocab.centers = [] ;
 model.vocab.tree = struct ;
 model.vocab.weights = ones(opts.numWords,1) ;
-model.index = struct('ids',[],'frames',[],'words',[],'histograms',[]) ;
+model.index = struct('ids',[],'frames',[],'words',[],'histograms',[],'names',[]) ;
 
 %% Sample descriptors from example images
 num = opts.numWords * 10 ;
@@ -65,4 +65,4 @@ model.vocab.centers = vl_kmeans(descrs, opts.numWords, ...
                                 'verbose', ...
                                 'algorithm', 'ann', ...
                                 'maxNumIterations', opts.maxNumKMeansIterations)  ;
-model.vocab.tree = vl_kdtreebuild(model.vocab.centers) ;
+model.vocab.tree = vl_kdtreebuild(model.vocab.centers, 'numTrees', 3) ;

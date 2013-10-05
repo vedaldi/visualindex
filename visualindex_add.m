@@ -14,6 +14,7 @@ parfor i = 1:length(images)
           mfilename, images{i}, i, numel(images)) ;
   im = imread(images{i}) ;
   [frames{i}, descrs] = visualindex_get_features(model, im) ;
+  frames{i} = single(frames{i}) ;
   words{i} = visualindex_get_words(model, descrs) ;
   histograms{i} = sparse(double(words{i}),1,...
                          ones(length(words{i}),1), ...
@@ -23,7 +24,7 @@ model.index.ids = cat(2, model.index.ids, ids) ;
 model.index.frames = cat(2, model.index.frames, frames) ;
 model.index.words = cat(2, model.index.words, words) ;
 model.index.histograms = cat(2, model.index.histograms, histograms{:}) ;
-
+model.index.names = cat(2,  model.index.names, images) ;
 
 %% Compute a visual word histogram for each image, compute TF-IDF
 % weights, and then reweight the histograms.
