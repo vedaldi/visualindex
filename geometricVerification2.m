@@ -78,7 +78,9 @@ function [inliers, H] = geometricVerification2(f1, f2, matches, varargin)
     inliers = find(dist2 < opts.tolerance3^2) ;
   end
 
-  H = inv(H21) ;
+  if numel(inliers) >= 8
+    H = inv(H21) ;
+  end
 end
 
 % --------------------------------------------------------------------

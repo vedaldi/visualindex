@@ -22,25 +22,26 @@ opts.plotAllFrames = false ;
 opts.homography = [];
 opts = vl_argparse(opts, varargin) ;
 
+% plot the images side by side
 dh1 = max(size(im2,1)-size(im1,1),0) ;
 dh2 = max(size(im1,1)-size(im2,1),0) ;
-
-o = size(im1,2) ;
-if size(matches,1) == 1
-  i1 = find(matches) ;
-  i2 = matches(i1) ;
-else
-  i1 = matches(1,:) ;
-  i2 = matches(2,:) ;
-end
-
-hold on ;
-f2p = f2 ;
-f2p(1,:) = f2p(1,:) + o ;
 
 cla ; set(gca,'ydir', 'reverse') ;
 imagesc([padarray(im1,dh1,'post') padarray(im2,dh2,'post')]) ;
 axis image off ;
+
+% overlay the matches, if any
+o = size(im1,2) ;
+if ~isempty(matches)
+  i1 = matches(1,:) ;
+  i2 = matches(2,:) ;
+else
+  i1 = [] ;
+  i2 = [] ;
+end
+
+f2p = f2 ;
+f2p(1,:) = f2p(1,:) + o ;
 if opts.plotAllFrames
   vl_plotframe(f1,'linewidth',2) ;
   vl_plotframe(f2p,'linewidth',2) ;
@@ -48,6 +49,7 @@ else
   vl_plotframe(f1(:,i1),'linewidth',2) ;
   vl_plotframe(f2p(:,i2),'linewidth',2) ;
 end
+
 line([f1(1,i1);f2p(1,i2)], [f1(2,i1);f2p(2,i2)]) ;
 title(sprintf('number of matches: %d', size(matches,2))) ;
 

@@ -8,6 +8,7 @@ function model = visualindex_add(model, images, ids)
 %% Extract features and histograms from images
 
 frames = cell(1,length(images)) ;
+words = cell(1,length(images)) ;
 histograms = cell(1,length(images)) ;
 parfor i = 1:length(images)
   fprintf('%s: extracting features from %s (%d of %d)\n', ...
@@ -29,12 +30,14 @@ model.index.names = cat(2,  model.index.names, images) ;
 %% Compute a visual word histogram for each image, compute TF-IDF
 % weights, and then reweight the histograms.
 
+numDocuments = max(1, size(model.index.histograms,2)) ;
+numDocumentsPerWord = max(1, sum(model.index.histograms > 0,2)) ;
 oldWeights = model.vocab.weights ;
-model.vocab.weights = log((size(model.index.histograms,2)+1) ...
-                          ./  (max(sum(model.index.histograms > 0,2),eps))) ;
+model.vocab.weights = log(numDocuments ./ numDocumentsPerWord) ;
+reweight = model.vocab.weights ./ oldWeights ;
 
 % reweight and renormalize all histograms
 for t = 1:length(model.index.ids)
-  h = model.index.histograms(:,t) .*  (model.vocab.weights ./ oldWeights) ;
+  h = model.index.histograms(:,t) .* reweight ;
   model.index.histograms(:,t) = h / norm(h) ;
 end

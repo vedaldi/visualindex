@@ -2,9 +2,15 @@ run vlfeat/toolbox/vl_setup ;
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
-opts.indexPath = 'data/index5.mat' ;
-opts.emptyIndexPath = 'data/index-empty5.mat' ;
-opts.resultPath = 'data/results5.mat' ;
+opts.indexPath = 'data/index8.mat' ;
+opts.emptyIndexPath = 'data/index-empty8.mat' ;
+opts.resultPath = 'data/results8.mat' ;
+opts.geometricVerification = 1 ; 
+
+% no sp 52.50 (fast kdtree) 65.18 mAP
+% no sp 55.5 (slow kdtree) 67.41 mAP
+% sp (larger patches) 68.13 mAP
+% no sp 500k vwords 70 mAP sp 79.09 mAP
 
 % Get Oxford5k data
 if exist(opts.imdbPath, 'file')
@@ -34,7 +40,7 @@ else
   if exist(opts.emptyIndexPath, 'file')
     index = load(opts.emptyIndexPath) ;
   else
-    index = visualindex_build(paths,'numWords', 1e5) ;
+    index = visualindex_build(paths,'numWords', 5e5) ;
     save(opts.emptyIndexPath, '-STRUCT', 'index') ;
   end
   index = visualindex_add(index, paths, images.id) ;
@@ -47,10 +53,15 @@ for q=1:numel(queries)
 end
 index.rerankDepth = 200 ;
 
+index = visualindex_add(index,{},[]) ;
+
 % Evaluate queries
 for q = 1:numel(queries)
   path = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
-  [ids, scores, matches, H, frames] = visualindex_query(index, imread(path), 'box', queries(q).box) ;
+  [ids, scores, matches, H, frames] = visualindex_query(index, ...
+    queries(q).imageId, ...
+    'box', queries(q).box, ...
+    'geometricVerification', opts.geometricVerification) ;
   labels = 2 * ismember(ids, [queries(q).good, queries(q).ok]) - 1 ;
   labels(ismember(ids, queries(q).junk)) = 0 ;
 
@@ -67,5 +78,6 @@ for q = 1:numel(queries)
   results(q).ap = info.ap ;
   fprintf('%35s: %.2f AP\n', queries(q).name, info.ap*100) ;
 end
+fprintf('%35s: %.2f AP\n', 'mean', mean([results.ap])*100) ;
 
 save(opts.resultPath, 'results') ;

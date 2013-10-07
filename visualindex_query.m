@@ -13,16 +13,24 @@ function [ids, scores, matches, H, frames] = visualindex_query(model, im, vararg
 % Author: Andrea Vedaldi
 
 opts.box = [] ;
+opts.geometricVerification = true ;
 opts = vl_argparse(opts, varargin) ;
 
 % reranking depth cannot be larger than the number of indexed images
 depth = min(model.rerankDepth, numel(model.index.ids)) ;
 
 % extract the features, visual words, and histogram for the query images
-[frames, descrs] = visualindex_get_features(model, im) ;
-words = visualindex_get_words(model, descrs) ;
+if numel(im) > 1
+  % im is an image; extract features
+  [frames, descrs] = visualindex_get_features(model, im) ;
+  words = visualindex_get_words(model, descrs) ;
+else
+  % im is an index in the database
+  frames = model.index.frames{im} ;
+  words = model.index.words{im} ;
+end
 
-% cropb box if any
+% crop by the box, if any
 if ~isempty(opts.box)
   ok = frames(1,:) >= opts.box(1) & ...
        frames(1,:) <= opts.box(3) & ...
@@ -37,13 +45,13 @@ histogram = visualindex_get_histogram(model, words) ;
 
 % compute histogram-based score
 scores = histogram' * model.index.histograms ;
-
-% update top scores using geometric verification
 [scores, perm] = sort(scores, 'descend') ;
 ids = model.index.ids(perm) ;
-
 H = cell(1,depth) ;
 matches = cell(1,depth) ;
+if ~opts.geometricVerification, return ; end
+
+% update top scores using geometric verification
 words2 = model.index.words(perm(1:depth)) ;
 frames2 = model.index.frames(perm(1:depth)) ;
 
