@@ -39,5 +39,5 @@ reweight = model.vocab.weights ./ oldWeights ;
 % reweight and renormalize all histograms
 for t = 1:length(model.index.ids)
   h = model.index.histograms(:,t) .* reweight ;
-  model.index.histograms(:,t) = h / norm(h) ;
+  model.index.histograms(:,t) = h / max(norm(h), 1e-12) ;
 end

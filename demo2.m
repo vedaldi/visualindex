@@ -2,15 +2,20 @@ run vlfeat/toolbox/vl_setup ;
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
-opts.indexPath = 'data/index8.mat' ;
-opts.emptyIndexPath = 'data/index-empty8.mat' ;
-opts.resultPath = 'data/results8.mat' ;
-opts.geometricVerification = 1 ; 
+opts.indexPath = 'data/index11.mat' ;
+opts.emptyIndexPath = 'data/index-empty11.mat' ;
+opts.resultPath = 'data/results11.mat' ;
+opts.geometricVerification = 0 ; 
 
 % no sp 52.50 (fast kdtree) 65.18 mAP
 % no sp 55.5 (slow kdtree) 67.41 mAP
 % sp (larger patches) 68.13 mAP
 % no sp 500k vwords 70 mAP sp 79.09 mAP
+% larger still (20) is actually less good (77.93)
+% try 17.5, 78.something
+% ok, now try 12.5 and no std normaliz 79.04 still, which is not bad (72%
+% with no sp)
+%
 
 % Get Oxford5k data
 if exist(opts.imdbPath, 'file')
@@ -52,6 +57,9 @@ for q=1:numel(queries)
   queries(q).imagePath = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
 end
 index.rerankDepth = 200 ;
+
+bad = find(any(isnan(index.index.histograms))) ;
+index.index.histograms(:,bad) = 0 ;
 
 index = visualindex_add(index,{},[]) ;
 

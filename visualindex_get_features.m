@@ -19,7 +19,7 @@ if ~isa(im,'single')
   im = im2single(im) ;
 end
 
-im = im / std(im(:)) ;
+%im = im / std(im(:)) ;
 
 [f,d] = vl_covdet(...
   im, ...
