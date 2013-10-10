@@ -33,13 +33,16 @@ function model = visualindex_build(images, varargin)
 % Author: Andrea Vedaldi
 
 opts.numWords = 1e4 ;
+opts.rootSift = true ;
 opts.maxNumKMeansIterations = 20 ;
+opts.rerankDepth = 40 ;
 opts = vl_argparse(opts, varargin) ;
 
 randn('state',0) ;
 rand('state',0) ;
 
-model.rerankDepth = 40 ;
+model.rerankDepth = opts.rerankDepth ;
+model.rootSift = opts.rootSift ;
 model.vocab.size = opts.numWords ;
 model.vocab.centers = [] ;
 model.vocab.tree = struct ;

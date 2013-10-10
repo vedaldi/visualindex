@@ -27,3 +27,8 @@ end
   'EstimateAffineShape', true, ...
   'PatchRelativeExtent', 12.5, ...
   'Method', 'DoG') ;
+
+if model.rootSift
+  d = sqrt(d) ;
+  d = bsxfun(@times, d, 1./max(1e-12, sqrt(sum(d.^2)))) ;
+end

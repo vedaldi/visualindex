@@ -1,11 +1,15 @@
-run vlfeat/toolbox/vl_setup ;
+% DEMO_OXFORD5K  Demonstrates the software on Oxford 5k data
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
-opts.indexPath = 'data/index11.mat' ;
-opts.emptyIndexPath = 'data/index-empty11.mat' ;
-opts.resultPath = 'data/results11.mat' ;
-opts.geometricVerification = 0 ; 
+opts.indexPath = 'data/index12.mat' ;
+opts.emptyIndexPath = 'data/index-empty12.mat' ;
+opts.resultPath = 'data/results12.mat' ;
+opts.geometricVerification = 1 ;
+opts.rootSift = 1 ;
+opts.rerankDepth = 200 ;
+
+run vlfeat/toolbox/vl_setup ;
 
 % no sp 52.50 (fast kdtree) 65.18 mAP
 % no sp 55.5 (slow kdtree) 67.41 mAP
@@ -15,9 +19,10 @@ opts.geometricVerification = 0 ;
 % try 17.5, 78.something
 % ok, now try 12.5 and no std normaliz 79.04 still, which is not bad (72%
 % with no sp)
-%
+% root sift brings this to 82.51
 
-% Get Oxford5k data
+
+%% Get Oxford5k data
 if exist(opts.imdbPath, 'file')
   load(opts.imdbPath, 'images', 'queries') ;
 else
@@ -35,9 +40,7 @@ else
   save(opts.imdbPath, 'images', 'queries') ;
 end
 
-% Build the index
-
-% Populate the index
+%% Create the index
 if exist(opts.indexPath, 'file')
   index = load(opts.indexPath) ;
 else
@@ -45,7 +48,10 @@ else
   if exist(opts.emptyIndexPath, 'file')
     index = load(opts.emptyIndexPath) ;
   else
-    index = visualindex_build(paths,'numWords', 5e5) ;
+    index = visualindex_build(paths,...
+      'numWords', 5e5, ...
+      'rerankDepth', opts.rerankDepth, ...
+      'rootSift', opts.rootSift) ;
     save(opts.emptyIndexPath, '-STRUCT', 'index') ;
   end
   index = visualindex_add(index, paths, images.id) ;
@@ -56,14 +62,13 @@ index.index.names = cellfun(@(x) fullfile(images.dir, x), images.name, 'UniformO
 for q=1:numel(queries)
   queries(q).imagePath = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
 end
-index.rerankDepth = 200 ;
 
-bad = find(any(isnan(index.index.histograms))) ;
-index.index.histograms(:,bad) = 0 ;
+%index.rerankDepth = 200 ;
+%bad = find(any(isnan(index.index.histograms))) ;
+%index.index.histograms(:,bad) = 0 ;
+%index = visualindex_add(index,{},[]) ;
 
-index = visualindex_add(index,{},[]) ;
-
-% Evaluate queries
+%% Evaluate queries
 for q = 1:numel(queries)
   path = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
   [ids, scores, matches, H, frames] = visualindex_query(index, ...
@@ -87,5 +92,4 @@ for q = 1:numel(queries)
   fprintf('%35s: %.2f AP\n', queries(q).name, info.ap*100) ;
 end
 fprintf('%35s: %.2f AP\n', 'mean', mean([results.ap])*100) ;
-
 save(opts.resultPath, 'results') ;
