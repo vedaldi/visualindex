@@ -28,6 +28,7 @@ dh2 = max(size(im1,1)-size(im2,1),0) ;
 
 cla ; set(gca,'ydir', 'reverse') ;
 imagesc([padarray(im1,dh1,'post') padarray(im2,dh2,'post')]) ;
+hold on ;
 axis image off ;
 
 % overlay the matches, if any

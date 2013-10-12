@@ -1,28 +1,25 @@
-% DEMO_OXFORD5K  Demonstrates the software on Oxford 5k data
+% DEMO_OXFORD5K  Demonstrates using the visual index to search the Oxford 5k data
+%   Expected mAP: about 83%
+%
+%   Paramenters significanlty affecting performance:
+%
+%     * ANN accuracy: of KDTree (1000 leaf comparisons, 8 trees)
+%     * Num. visual word (500k is much better than 100k)
+%     * Root SIFT
+%     * Measurement region size in covariant detector
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
-opts.indexPath = 'data/index12.mat' ;
-opts.emptyIndexPath = 'data/index-empty12.mat' ;
-opts.resultPath = 'data/results12.mat' ;
+opts.indexPath = 'data/index14.mat' ;
+opts.emptyIndexPath = 'data/index-empty14.mat' ;
+opts.resultPath = 'data/results14.mat' ;
 opts.geometricVerification = 1 ;
 opts.rootSift = 1 ;
 opts.rerankDepth = 200 ;
 
 run vlfeat/toolbox/vl_setup ;
 
-% no sp 52.50 (fast kdtree) 65.18 mAP
-% no sp 55.5 (slow kdtree) 67.41 mAP
-% sp (larger patches) 68.13 mAP
-% no sp 500k vwords 70 mAP sp 79.09 mAP
-% larger still (20) is actually less good (77.93)
-% try 17.5, 78.something
-% ok, now try 12.5 and no std normaliz 79.04 still, which is not bad (72%
-% with no sp)
-% root sift brings this to 82.51
-
-
-%% Get Oxford5k data
+%% Setup the Oxford5k data
 if exist(opts.imdbPath, 'file')
   load(opts.imdbPath, 'images', 'queries') ;
 else
@@ -63,12 +60,7 @@ for q=1:numel(queries)
   queries(q).imagePath = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
 end
 
-%index.rerankDepth = 200 ;
-%bad = find(any(isnan(index.index.histograms))) ;
-%index.index.histograms(:,bad) = 0 ;
-%index = visualindex_add(index,{},[]) ;
-
-%% Evaluate queries
+%% Evaluate the Oxford5k queries
 for q = 1:numel(queries)
   path = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
   [ids, scores, matches, H, frames] = visualindex_query(index, ...

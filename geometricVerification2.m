@@ -30,11 +30,12 @@ function [inliers, H] = geometricVerification2(f1, f2, matches, varargin)
 
   scores = zeros(1,numMatches) ;
   inliers = cell(1,numMatches) ;
+  H21 = cell(1,numMatches) ;
   for m = 1:numMatches
     A1 = toAffinity(f1(:,matches(1,m))) ;
     A2 = toAffinity(f2(:,matches(2,m))) ;
-    H21 = A2 * inv(A1) ;
-    x1p = H21(1:2,:) * x1hom ;
+    H21{m} = A2 * inv(A1) ;
+    x1p = H21{m}(1:2,:) * x1hom ;
     dist2 = sum((x2 - x1p).^2,1) ;
     inliers{m} = find(dist2 < opts.tolerance1^2) ;
     scores(m) = numel(inliers{m}) ;
@@ -43,6 +44,7 @@ function [inliers, H] = geometricVerification2(f1, f2, matches, varargin)
   % affinity
   [score,m] = max(scores) ;
   inliers = inliers{m} ;
+  H21 = H21{m} ;
 
   if numel(inliers) > 8
     H21 = x2(:,inliers) / x1hom(:,inliers) ;
@@ -78,8 +80,8 @@ function [inliers, H] = geometricVerification2(f1, f2, matches, varargin)
     inliers = find(dist2 < opts.tolerance3^2) ;
   end
 
-  if numel(inliers) >= 8
-    H = inv(H21) ;
+  if numel(inliers) > 8
+    H = inv(H21 + 1e-8 * eye(3)) ;
   end
 end
 
