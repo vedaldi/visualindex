@@ -1,14 +1,23 @@
-function [ids, scores, matches, H, frames] = visualindex_query(model, im, varargin)
+function [ids, scores, result] = visualindex_query(model, im, varargin)
 % VISUALINDEX_QUERY  Search index for matching images
-%   [IDS, SCORES, MATCHES] = VISUALINDEX_QUERY(MODEL, IM) searches the
-%   index MODEL for images matching the query image IM. It returns
-%   a list of imge IDS and SCORES by descending confidence.
+%   [IDS, SCORES] = VISUALINDEX_QUERY(MODEL, IM) searches the index
+%   MODEL for images matching the query image IM. It returns a list of
+%   imge IDS and SCORES by descending confidence.
 %
 %   The function first matches images based on the visual words
 %   histograms and then geometrically verifies the top
 %   MODEL.RERANKDEPTH results, reranking those.  The function also
 %   returns MATCHES, an array of structures with the geometric
 %   verification `certificates' for these top matches.
+%
+%   [IDS, SCORES, RESULT] = VISUALINDEX_QUERY(...) returns an
+%   additional structure RESULT useful for visualization (use
+%   VISUALINDEX_SHOW()).
+%
+%   Options:
+%
+%   GeometricVerification:: true
+%     Swtich geometric verification on or off.
 
 % Author: Andrea Vedaldi
 
@@ -49,6 +58,12 @@ scores = histogram' * model.index.histograms ;
 ids = model.index.ids(perm) ;
 H = cell(1,depth) ;
 matches = cell(1,depth) ;
+result.ids = ids ;
+result.scores = scores ;
+result.matches = cell(1,depth) ;
+result.H = cell(1,depth) ;
+result.query = im ;
+result.queryFrames = frames ;
 if ~opts.geometricVerification, return ; end
 
 % update top scores using geometric verification
@@ -76,3 +91,8 @@ end
 ids(1:depth) = ids(perm) ;
 matches = matches(perm) ;
 H = H(perm) ;
+
+result.ids = ids ;
+result.scores = scores ;
+result.matches = matches ;
+result.H = H ;

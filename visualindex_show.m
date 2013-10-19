@@ -1,8 +1,14 @@
 function visualindex_show(model, result, varargin)
-% VISUALINDEX_SHOW  Displays search results
-%   PLOTRETRIEVEDIMAGES(IMDB, SCORES) displays the images in the
-%   database IMDB that have largest SCORES. SCORES is a row vector of
-%   size equal to the number of images in IMDB.
+% VISUALINDEX_SHOW  Display search results
+%   VISUALINDEX_SHOW(MODEL, RESULT) shows the query result RESULT (as
+%   obtained from VISUALINDEX_QUERY()) given the index MODEL.
+%
+%   Click on a retrieved images to obtain more information.
+%
+%   Options:
+%
+%   Num:: 16
+%     Number of top matches to display.
 
 % Author: Andrea Vedaldi and Mireca Cimpoi
 
@@ -47,11 +53,21 @@ function zoomIn(h, event, data)
 data = guidata(h) ;
 if ~isstruct(data.result), return ; end
 
+if numel(data.result.query) > 1
+  if ischar(data.result.query)
+    im1 = imread(data.result.query) ;
+  else
+    im1 = data.result.query ;
+  end
+else
+  ii = find(data.result.query == data.model.index.ids) ;
+  im1 = imread(data.model.index.names{ii}) ;
+end
+frames1 = data.result.queryFrames ;
+
 rank = find(h == data.h) ;
 ii = find(data.result.ids(rank) == data.model.index.ids) ;
-im1 = imread(data.result.query.imagePath) ;
 im2 = imread(data.model.index.names{ii}) ;
-frames1 = data.result.queryFrames ;
 frames2 = data.model.index.frames{ii} ;
 matches12 = data.result.matches{rank} ;
 H12 = data.result.H{rank} ;

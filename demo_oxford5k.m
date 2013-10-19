@@ -1,18 +1,18 @@
 % DEMO_OXFORD5K  Demonstrates using the visual index to search the Oxford 5k data
-%   Expected mAP: about 83%
+%   Expected mAP: 82.54% (with geom. verificatin) and 74.79 (without).
 %
-%   Paramenters significanlty affecting performance:
+%   Paramenters significanlty affecting the performance include:
 %
-%     * ANN accuracy: of KDTree (1000 leaf comparisons, 8 trees)
+%     * ANN accuracy: of KDTree (good setting: 1000 leaf comparisons, 8 trees)
 %     * Num. visual word (500k is much better than 100k)
 %     * Root SIFT
 %     * Measurement region size in covariant detector
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
-opts.indexPath = 'data/index14.mat' ;
-opts.emptyIndexPath = 'data/index-empty14.mat' ;
-opts.resultPath = 'data/results14.mat' ;
+opts.indexPath = 'data/index19.mat' ;
+opts.emptyIndexPath = 'data/index-empty19.mat' ;
+opts.resultPath = 'data/results19.mat' ;
 opts.geometricVerification = 1 ;
 opts.rootSift = 1 ;
 opts.rerankDepth = 200 ;
@@ -63,25 +63,22 @@ end
 %% Evaluate the Oxford5k queries
 for q = 1:numel(queries)
   path = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
-  [ids, scores, matches, H, frames] = visualindex_query(index, ...
-    queries(q).imageId, ...
-    'box', queries(q).box, ...
-    'geometricVerification', opts.geometricVerification) ;
+  [ids, scores, result] = visualindex_query(index, ...
+                                            queries(q).imageId, ...
+                                            'box', queries(q).box, ...
+                                            'geometricVerification', opts.geometricVerification) ;
   labels = 2 * ismember(ids, [queries(q).good, queries(q).ok]) - 1 ;
   labels(ismember(ids, queries(q).junk)) = 0 ;
 
   [rc,pr,info] = vl_pr(labels, scores) ;
-  results(q).query = queries(q) ;
-  results(q).ids = ids ;
-  results(q).matches = matches ;
-  results(q).queryFrames = frames ;
-  results(q).H = H ;
-  results(q).scores = scores ;
-  results(q).labels = labels ;
-  results(q).rc = rc ;
-  results(q).pr = pr ;
-  results(q).ap = info.ap ;
-  fprintf('%35s: %.2f AP\n', queries(q).name, info.ap*100) ;
+  queries(q).result = result ;
+  queries(q).result.labels = labels ;
+  queries(q).rc = rc ;
+  queries(q).pr = pr ;
+  queries(q).ap = info.ap ;
+  fprintf('%35s: %.2f AP\n', queries(q).name, queries(q).ap*100) ;
 end
-fprintf('%35s: %.2f AP\n', 'mean', mean([results.ap])*100) ;
-save(opts.resultPath, 'results') ;
+fprintf('%35s: %.2f AP\n', 'mean', mean([queries.ap])*100) ;
+save(opts.resultPath, 'queries') ;
+
+% visualindex_show(index, queries(1).result)

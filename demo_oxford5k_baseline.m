@@ -3,7 +3,7 @@ function demo_oxford5k_baseline
 %   Match images directly, counting inliers to rank them. Slow but
 %   accurate.
 %
-%   Expected mAP: 86.65%.
+%   Expected mAP: 87.72%.
 
 opts.lite = false ;
 opts.imdbPath = 'data/imdb.mat' ;
@@ -27,10 +27,11 @@ else
   end
   save(opts.imdbPath, 'images', 'queries') ;
 end
+numQueries = numel(queries) ;
 
 %% Precompute features for queries
 model.rootSift = true ;
-parfor q = 1:numel(queries)
+parfor q = 1:numQueries
   fprintf('ox5k baseline: query %d of %d\n', q, numel(queries)) ;
   path = fullfile(images.dir, [queries(q).imageName '.jpg']) ;
   [fq{q},dq{q}] = visualindex_get_features(model, imread(path)) ;
@@ -44,7 +45,6 @@ end
 
 %% Loop through all the images to compute matches
 scores = zeros(numel(queries), numel(images.id)) ;
-numQueries = numel(queries) ;
 parfor t = 1:numel(images.id)
   fprintf('ox5k baseline: image %d of %d\n', t, numel(images.id)) ;
   path = fullfile(images.dir, images.name{t}) ;
@@ -53,24 +53,24 @@ parfor t = 1:numel(images.id)
   for q = 1:numQueries
     [matches, H] = matchFeatures(fq{q},dq{q},f,d) ;
     scores(q,t) = size(matches,2) ;
-    %plotMatches(imread(fullfile(images.dir, [queries(q).imageName '.jpg'])),imread(path),fq{1},f,matches)
+    %plotMatches(imread(fullfile(images.dir, [queries(q).imageName '.jpg'])), ...
+    %            imread(path),fq{1},f,matches)
   end
 end
 
 %% Evaluate mAP
-for q=1:numel(queries)
+for q=1:numQueries
   labels = 2 * ismember(images.id, [queries(q).good, queries(q).ok]) - 1 ;
   labels(ismember(images.id, queries(q).junk)) = 0 ;
 
   [rc,pr,info] = vl_pr(labels, scores(q,:)) ;
 
-  results(q).query = queries(q) ;
-  results(q).scores = scores(q,:) ;
-  results(q).labels = labels ;
-  results(q).rc = rc ;
-  results(q).pr = pr ;
-  results(q).ap = info.ap ;
-  fprintf('%35s: %.2f AP\n', queries(q).name, info.ap*100) ;
+  queries(q).result.scores = scores(q,:) ;
+  queries(q).result.labels = labels ;
+  queries(q).rc = rc ;
+  queries(q).pr = pr ;
+  queries(q).ap = info.ap ;
+  fprintf('%35s: %.2f AP\n', queries(q).name, queries(q).ap*100) ;
 end
-fprintf('%35s: %.2f AP\n', 'mean', mean([results.ap])*100) ;
-save(opts.resultPath, 'results');
+fprintf('%35s: %.2f AP\n', 'mean', mean([queries.ap])*100) ;
+save(opts.resultPath, 'queries');
