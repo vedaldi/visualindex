@@ -78,7 +78,7 @@ parfor t = 1:depth
   %im2=imread(model.index.names{perm(t)});
   %figure(101) ; clf ; plotMatches(im,im2,frames,frames2,matches{t}) ;
 
-  [inliers, H{t}] = geometricVerification2(frames, frames2{t}, matches{t}) ;
+  [inliers, H{t}] = geometricVerification(frames, frames2{t}, matches{t}) ;
 
   if numel(inliers) >= 6
     scores(t) = scores(t) + numel(inliers) ;

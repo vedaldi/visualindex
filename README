@@ -20,20 +20,20 @@ The home of this package is on GitHub:
 
 https://github.com/vedaldi/visualindex
 
-The code requires MATLAB 2009B onwards. Do not forget to install the
-VLFeat library in a vlfeat/ subfolder.
+The code requires MATLAB 2009B onwards and requires installing the
+VLFeat library in the vlfeat/ subfolder.
 
 # USING THE CODE
 
-Using the code is straightforwards. Given a cell array of paths to
-images `images`, start by initializing the index structure:
+Using the code is simple. Given a cell array of paths to images
+`images`, start by initializing the index structure:
 
   index = visualindex_build(images) ;
 
 This will estimate a visual word vocabulary, but will not add the
 images to the index yet. Use options such as 'numWords', to specify
 how many visual words to use in the creation of the index (see the
-inline help). To add images to the index use:
+inline help for details). To add images to the index use:
 
   visualindex_add(index, images, ids) ;
 
@@ -43,11 +43,10 @@ use
 
   [ids, scores] = visualindex_query(index, image)
 
-Where `image` is either an ID of one of the images added to the index,
-a new image, or a path to a new image (it is also possible to specify
-more than one image at a time). Use options such as
+where `image` is either an ID of one of the images added to the index,
+a new image, or a path to a new image. Use options such as
 `geometricVerification` to control aspects of the query process. Use
-the 'box' option to restrict the search to a box. The function returns
+the `box` option to restrict the search to a box. The function returns
 a list of image ids and matching scores by decreasing confidence.
 
 To visualize the top matches use:
