@@ -21,7 +21,8 @@ and research.
 The home of this package is on GitHub
 (https://github.com/vedaldi/visualindex). The code requires MATLAB
 2009B onwards and requires installing the VLFeat library in the
-vlfeat/ subfolder.
+vlfeat/ subfolder (VLFeat is configured as a submodule of the git
+repository, and can also be downloaded at http://www.vlfeat.org).
 
 ## USING THE CODE
 
@@ -64,8 +65,10 @@ MATLAB and issue
 
 to automatically download the Oxford 5k building dataset and start
 running demo queries. The indexing process takes a while, but can
-accelerated significantly by distributing the work on multiple cores or
-computers by opening a matlabpool (see MATLABPOOL()).
+accelerated significantly by distributing the work on multiple cores
+or computers by opening a matlabpool (see `matlabpool` in MATLAB).
+Furthermore, VLFeat can take advantage of multiple core CPUs if MATLAB
+is *not* started with the `-singleCompThread` option.
 
 ## CHANGES
 
